@@ -1,0 +1,107 @@
+% 
+\documentclass[a4paper]{article}
+\usepackage[OT1]{fontenc}
+\usepackage{Sweave}
+\begin{document}
+
+\title{Winter_Olympics.Rnw}
+\author{jkanglim}
+
+\maketitle
+
+# tips on reading a Google Spreadsheet:
+# http://blog.revolution-computing.com/2009/09/how-to-use-a-google-spreadsheet-as-data-in-r.html
+# Data taken from:"https://spreadsheets.google.com/ccc?key=0AgdO92JOXxAOdDVlaUpkNlB2WERtV3l1ZVFYbzllQWc"
+# http://www.guardian.co.uk/news/datablog/2010/feb/11/winter-olympics-medals-by-country
+
+googleLink <- "http://spreadsheets.google.com/pub?key=tsddww6vOYePkhPSxRpDeYw&single=true&gid=1&output=csv"
+medals <- read.csv(googleLink, stringsAsFactors = FALSE)
+savePlot <- TRUE # optional variable used to save or not save plots in code
+
+# remove rows that do not contain data
+medals$Year <- as.numeric(medals$Year)
+medals <- medals[!is.na(medals$Year), ]
+
+
+# Quick look at data
+head(medals)
+sapply(medals, function(x) cbind(sort(table(x), decreasing = TRUE)))
+
+
+# How many medals have been awarded in each Olympics?
+medalsByYear <- aggregate(medals$Year, list(Year = medals$Year), length)
+if (savePlot == TRUE)  png("fig1.png")
+plot(x ~ Year, medalsByYear, ylim = c(0,max(x)), 
+    ylab = "Total Medals Awarded", bty="l",
+    main = "Total Medals Awarded in Winter Olympics by Year")
+if (savePlot == TRUE) dev.off()
+
+# How has the amount of medals awarded to males and females changed over the years?
+# Get data.
+medalsByYearByGender <- aggregate(medals$Year, 
+    list(Year = medals$Year, Event.gender = medals$Event.gender), length)
+medalsByYearByGender <- medalsByYearByGender[medalsByYearByGender$Event.gender != "X", ]
+
+# Plot results.
+if (savePlot == TRUE)  png("fig2.png")
+plot(x ~ Year, medalsByYearByGender[medalsByYearByGender$Event.gender == "M", ], 
+    ylim = c(0,max(x)), pch = "m", col = "blue", 
+    ylab = "Total Medals Awarded", bty="l",
+    main = "Total Medals Awarded in Winter Olympics\n by Gender and by Year")
+points(medalsByYearByGender[medalsByYearByGender$Event.gender == "W", "Year"],
+    medalsByYearByGender[medalsByYearByGender$Event.gender == "W", "x"],
+    col = "red", pch = "f")
+if (savePlot == TRUE) dev.off()
+
+# Table of proportion female
+propFemalePerYear <- medalsByYearByGender[medalsByYearByGender$Event.gender == "W", "x"] / (
+      medalsByYearByGender[medalsByYearByGender$Event.gender == "W", "x"] +
+      medalsByYearByGender[medalsByYearByGender$Event.gender == "M", "x"])
+propFemalePerYear <- round(propFemalePerYear, 2)
+cbind(Year = medalsByYearByGender[medalsByYearByGender$Event.gender == "W", "Year"],
+    PropFemale = propFemalePerYear)
+        
+
+# Which countries have won the most medals?
+sort(table(medals$NOC), dec = TRUE)
+
+
+# Of the countries that have won more than 50 medals,
+# which have the highest percentage of gold medals?
+NOC50Plus <- names(table(medals$NOC)[table(medals$NOC) > 50])
+medalsSubset <- medals[medals$NOC %in% NOC50Plus, ]
+medalsByMedalByNOC <- prop.table(table(medalsSubset$NOC, medalsSubset$Medal), margin = 1)
+medalsByMedalByNOC <- medalsByMedalByNOC[order(medalsByMedalByNOC[, "Gold"], 
+        decreasing = TRUE), c("Gold", "Silver", "Bronze")]
+round(medalsByMedalByNOC, 2)
+
+
+# How many different countries have won medals by year?
+listOfYears <- unique(medals$Year)
+names(listOfYears) <- unique(medals$Year)
+totalNocByYear <- sapply(listOfYears,  function(X) 
+      length(table(medals[medals$Year == X, "NOC"])))
+
+# Table
+totalNocByYear  
+
+# Plot
+if (savePlot == TRUE)  png("fig3.png")
+plot(x= names(totalNocByYear), totalNocByYear, 
+    ylim = c(0, max(totalNocByYear)),
+    xlab = "Year",
+    ylab = "Total Number of Countries",
+    bty = "l", 
+    main = "Total Number of Countries\n Winning Medals By Year")
+if (savePlot == TRUE) dev.off()
+
+# Which Countries have won a medal at every Olympics? 
+propYearsOnePlusMedals <- apply(table(medals$NOC, medals$Year) > 0, 1, mean)
+
+#Answer
+names(propYearsOnePlusMedals[propYearsOnePlusMedals == 1.0]) 
+
+# Table Sorted by Proportion of Olympics with a Medal
+cbind(sort(propYearsOnePlusMedals, decreasing = TRUE)) 
+
+\end{document}
