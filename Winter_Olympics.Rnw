@@ -2,48 +2,104 @@
 \documentclass[a4paper]{article}
 \usepackage[OT1]{fontenc}
 \usepackage{Sweave}
+\usepackage{hyperref}            % for links (only use on final printed version
+\hypersetup{pdfpagelayout=SinglePage} % http://www.tug.org/applications/hyperref/ftp/doc/manual.html
 \begin{document}
 
-\title{Winter_Olympics.Rnw}
-\author{jkanglim}
+
+\title{Sweave Example: Winter Olympic Medals}
+\author{Jeromy Anglim}
+
 
 \maketitle
 
-# tips on reading a Google Spreadsheet:
-# http://blog.revolution-computing.com/2009/09/how-to-use-a-google-spreadsheet-as-data-in-r.html
-# Data taken from:"https://spreadsheets.google.com/ccc?key=0AgdO92JOXxAOdDVlaUpkNlB2WERtV3l1ZVFYbzllQWc"
-# http://www.guardian.co.uk/news/datablog/2010/feb/11/winter-olympics-medals-by-country
-
-googleLink <- "http://spreadsheets.google.com/pub?key=tsddww6vOYePkhPSxRpDeYw&single=true&gid=1&output=csv"
-medals <- read.csv(googleLink, stringsAsFactors = FALSE)
-savePlot <- TRUE # optional variable used to save or not save plots in code
-
+<<>>=
+medals <- read.csv("data/medals.csv", stringsAsFactors = FALSE)
+options(width = 70)
 # remove rows that do not contain data
 medals$Year <- as.numeric(medals$Year)
 medals <- medals[!is.na(medals$Year), ]
+@
 
+The Olympic Medals data frame includes \Sexpr{nrow(medals)} medals
+from \Sexpr{min(medals$Year)} to \Sexpr{max(medals$Year)}. 
 
-# Quick look at data
-head(medals)
-sapply(medals, function(x) cbind(sort(table(x), decreasing = TRUE)))
+\section{Analyses}
+\subsection{Total Medals by Year}
 
+Figure~\ref{fig:medalsByYear} shows how the number of medals has 
+ increased over the years.
 
-# How many medals have been awarded in each Olympics?
+\begin{figure}[htb]
+\begin{center}
+<<fig=true, echo=false>>=
 medalsByYear <- aggregate(medals$Year, list(Year = medals$Year), length)
-if (savePlot == TRUE)  png("fig1.png")
-plot(x ~ Year, medalsByYear, ylim = c(0,max(x)), 
+
+plot(x ~ Year, medalsByYear, ylim = c(0,max(x)), las = 1, 
     ylab = "Total Medals Awarded", bty="l",
     main = "Total Medals Awarded in Winter Olympics by Year")
-if (savePlot == TRUE) dev.off()
+@
+\end{center}
+\caption{Total medals by Year}
+\label{fig:medalsByYear}
+\end{figure}
 
-# How has the amount of medals awarded to males and females changed over the years?
+<<>>=
+# http://www.math.mcmaster.ca/~bolker/emdbook/chap3A.pdf
+x <- medalsByYear
+names(x) <- c("year", "medals") 
+x$pos <- seq(x$year) 
+
+fit <- nls(medals ~ a * pos ^ b + c, x, start = list(a=10, b=1, c = 50))
+@
+
+In order to model this relationship, year was converted to ordinal position.
+A three parameter power function seemed plausible, $y = ax^b + c$, where 
+$y$ is total medals awarded and $x$ is the ordinal position of the olympics
+starting at one.
+The best fitting least square parameters were estimated to be
+$\Sexpr{round(coef(fit)["a"], 3)}x^%
+{\Sexpr{round(coef(fit)["b"], 3)}} + 
+\Sexpr{round(coef(fit)["c"], 3)}$.
+Figure~\ref{fig:medalByPos} displays the fit of the model.
+The model predicts that 2010, 2014, and 2018
+ would have 
+ \Sexpr{round(predict(fit, data.frame(pos=max(x$pos) + 1)))}, 
+ \Sexpr{round(predict(fit, data.frame(pos=max(x$pos) + 2)))}, and
+ \Sexpr{round(predict(fit, data.frame(pos=max(x$pos) + 3)))} medals
+ respectively.
+
+
+
+\begin{figure}[htb]
+\begin{center}
+<<fig=true, echo=false>>=
+plot(medals ~ pos, x,  las = 1, 
+		ylab = "Total Medals Awarded", 
+		xlab = "Ordinal Position of Olympics",
+		bty="l",
+		main = "Total Medals Awarded in Winter Olympics by Year")
+lines(x$pos, predict(fit))
+@
+\caption{Total medals awarded by ordinal position of Olympics
+with predicted three parameter power function fit displayed.}
+\label{fig:medalByPos}
+\end{center}
+\end{figure}
+		
+
+\subsection{Gender Ratio by Year}
+Figure~\ref{fig:genderRatioByYear} shows the relationship betweenn
+
+
+\begin{figure}[htb]
+\begin{center}
+<<fig=true>>=
 # Get data.
 medalsByYearByGender <- aggregate(medals$Year, 
     list(Year = medals$Year, Event.gender = medals$Event.gender), length)
 medalsByYearByGender <- medalsByYearByGender[medalsByYearByGender$Event.gender != "X", ]
 
-# Plot results.
-if (savePlot == TRUE)  png("fig2.png")
 plot(x ~ Year, medalsByYearByGender[medalsByYearByGender$Event.gender == "M", ], 
     ylim = c(0,max(x)), pch = "m", col = "blue", 
     ylab = "Total Medals Awarded", bty="l",
@@ -51,57 +107,66 @@ plot(x ~ Year, medalsByYearByGender[medalsByYearByGender$Event.gender == "M", ],
 points(medalsByYearByGender[medalsByYearByGender$Event.gender == "W", "Year"],
     medalsByYearByGender[medalsByYearByGender$Event.gender == "W", "x"],
     col = "red", pch = "f")
-if (savePlot == TRUE) dev.off()
+@
+\caption{}
+\label{fig:genderRatioByYear}
+\end{center}
+\end{figure}
 
-# Table of proportion female
+The follow shows a table of proportion female
+<<table_prop_female>>=
 propFemalePerYear <- medalsByYearByGender[medalsByYearByGender$Event.gender == "W", "x"] / (
       medalsByYearByGender[medalsByYearByGender$Event.gender == "W", "x"] +
       medalsByYearByGender[medalsByYearByGender$Event.gender == "M", "x"])
 propFemalePerYear <- round(propFemalePerYear, 2)
 cbind(Year = medalsByYearByGender[medalsByYearByGender$Event.gender == "W", "Year"],
     PropFemale = propFemalePerYear)
-        
+@   
 
-# Which countries have won the most medals?
+\subsection{Which countries have won the most medals?}
+<<>>=
 sort(table(medals$NOC), dec = TRUE)
+@
 
 
-# Of the countries that have won more than 50 medals,
-# which have the highest percentage of gold medals?
+\subsection{Countries with higher proportion of gold?}
+Of the countries that have won more than 50 medals,
+which have the highest percentage of gold medals?
+<<>>=
 NOC50Plus <- names(table(medals$NOC)[table(medals$NOC) > 50])
 medalsSubset <- medals[medals$NOC %in% NOC50Plus, ]
 medalsByMedalByNOC <- prop.table(table(medalsSubset$NOC, medalsSubset$Medal), margin = 1)
 medalsByMedalByNOC <- medalsByMedalByNOC[order(medalsByMedalByNOC[, "Gold"], 
         decreasing = TRUE), c("Gold", "Silver", "Bronze")]
 round(medalsByMedalByNOC, 2)
+@
 
-
-# How many different countries have won medals by year?
+\subsection{How many different countries have won medals by year?}
+<<>>=
 listOfYears <- unique(medals$Year)
 names(listOfYears) <- unique(medals$Year)
 totalNocByYear <- sapply(listOfYears,  function(X) 
       length(table(medals[medals$Year == X, "NOC"])))
 
-# Table
-totalNocByYear  
+totalNocByYear
+@
 
-# Plot
-if (savePlot == TRUE)  png("fig3.png")
+<<fig=true>>=
 plot(x= names(totalNocByYear), totalNocByYear, 
     ylim = c(0, max(totalNocByYear)),
     xlab = "Year",
     ylab = "Total Number of Countries",
     bty = "l", 
     main = "Total Number of Countries\n Winning Medals By Year")
-if (savePlot == TRUE) dev.off()
+@
 
-# Which Countries have won a medal at every Olympics? 
+\subsection{Which Countries have won a medal at every Olympics?} 
+<<>>=
 propYearsOnePlusMedals <- apply(table(medals$NOC, medals$Year) > 0, 1, mean)
-
-#Answer
 names(propYearsOnePlusMedals[propYearsOnePlusMedals == 1.0]) 
 
 # Table Sorted by Proportion of Olympics with a Medal
 cbind(sort(propYearsOnePlusMedals, decreasing = TRUE)) 
+@
 
 \end{document}
