@@ -1,0 +1,3 @@
+pause
+make
+cmd /k
