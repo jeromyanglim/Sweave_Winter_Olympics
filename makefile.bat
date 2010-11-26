@@ -1,3 +1,0 @@
-pause
-make
-cmd /k

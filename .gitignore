@@ -1,7 +1,2 @@
-*.eps
-*.pdf
-*.tex
-*.aux
-*.log
-*.out
-*.project
+/output
+.project
