@@ -1,7 +1,14 @@
-# Sweave Example: Winter Olympics Medals
+
+### Sweave Example: Winter Olympics Medals
 
 This is an example of using Sweave.
-It includes data and an Rnw file. 
+It includes data and an Rnw file.
+It is designed highlight a number of tricks which might be useful
+when preparing a polished report, such as
+
+* Formatted inline text using `Sexpr{}`
+* Polished graphics
+* LaTeX tables
 
 For more information go to:
 <http://jeromyanglim.blogspot.com>

@@ -1,5 +1,5 @@
 % 
-\documentclass[a4paper]{article}
+\documentclass[a4paper, 11pt]{article}
 \usepackage[OT1]{fontenc}
 \usepackage{Sweave}
 \SweaveOpts{echo=FALSE}

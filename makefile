@@ -1,12 +1,25 @@
+outputDir = .output
+rnwfile = Winter_Olympics
+backupDir = .backup
+
 all:
-	R CMD Sweave Winter_Olympics.Rnw
-	-mkdir output
-	-cp *.sty output
-	-mv *.tex *.pdf *.eps output
-	cd output; texify --run-viewer --pdf Winter_Olympics.tex 
+	R CMD Sweave $(rnwfile).Rnw
+	-mkdir $(outputDir)
+	-cp *.sty $(outputDir)
+	-mv *.tex *.pdf *.eps $(outputDir)
+	cd $(outputDir); texify --run-viewer --pdf $(rnwfile).tex 
+
+Stangle:
+	R CMD Stangle $(rnwfile).Rnw
+	-mkdir $(outputDir) 
+	-mv $(rnwfile).R $(outputDir)
 
 tex:
-	cd output; texify --run-viewer --pdf Winter_Olympics.tex
+	cd $(outputDir); texify --run-viewer --pdf $(rnwfile).tex
 
 clean:
-	-rm output/*
+	-rm $(outputDir)/*
+	
+backup:
+	-mkdir $(backupDir)
+	cp 	$(outputDir)/$(rnwfile).pdf $(backupDir)/$(rnwfile).pdf 
