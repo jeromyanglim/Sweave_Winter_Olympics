@@ -22,4 +22,4 @@ clean:
 	
 backup:
 	-mkdir $(backupDir)
-	cp 	$(outputDir)/$(rnwfile).pdf $(backupDir)/$(rnwfile).pdf 
+	cp 	$(outputDir)/$(rnwfile).pdf $(backupDir)/$(rnwfile).pdf

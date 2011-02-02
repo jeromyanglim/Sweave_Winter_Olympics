@@ -3,8 +3,8 @@
 
 This is an example of using Sweave.
 It includes data and an Rnw file.
-It is designed highlight a number of tricks which might be useful
-when preparing a polished report, such as
+It is designed to highlight a number of tricks which might be useful when
+preparing a polished report, such as:
 
 * Formatted inline text using `Sexpr{}`
 * Polished graphics
@@ -21,3 +21,7 @@ It was built on a system running:
 * MikTeX 2.8
 * Windows 7
 
+## Licence
+Licenced under the Simplified BSD License.
+For more information on FreeBSD see: 
+http://www.opensource.org/licenses/bsd-license.php
