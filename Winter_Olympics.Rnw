@@ -1,3 +1,4 @@
+
 \documentclass[a4paper, 11pt]{article}
 \usepackage[OT1]{fontenc}
 \usepackage{Sweave}
@@ -21,7 +22,7 @@ headheight=13.6pt]{geometry} %set margins to be 30mm (needs to include page numb
 
 \begin{document} 
 \pd{preliminaries}
-\title{Sweave Example: Winter Olympic Medals} 
+\title{Sweave Example: Winter Olympic Medals up to and including 2006} 
 \author{Jeromy Anglim}
 \maketitle
 
@@ -189,8 +190,8 @@ Norway has won the most medals with
 \Sexpr{cmm[["medals"]][1]} 
 (\Sexpr{round(cmm[["prop"]][1]* 100, 2)}\%).
 Table~\ref{tab:medalsByCountryRank} shows the top 10. 
-Russia and USSR have a combined total of  
-\Sexpr{sum(cmm$medals[c("RUS", "URS")])}.
+Russia, USSR, and EUN (Unified Team in 1992 Olympics) have a combined total of
+\Sexpr{sum(cmm$medals[c("RUS", "URS", "EUN")])}.
 Germany, GDR, and FRG have a combined medal total of 
 \Sexpr{sum(cmm$medals[c("GER", "GDR", "FRG")])}.
 
@@ -309,4 +310,83 @@ cat(ausmedals$tex, sep ="\n")
     \end{tabular}
     \end{center}
 \end{table}
+
+\subsection{Ice Hockey}
+<<icehockey_prepare>>=
+icehockey <- medals[medals$Sport == "Ice Hockey" & 
+    medals$Event.gender == "M" &
+    medals$Medal == "Gold",  ]
+icehockeyf <- medals[medals$Sport == "Ice Hockey" & 
+    medals$Event.gender == "W" &
+    medals$Medal == "Gold",  ]
+
+# names(table(icehockey$NOC)[table(icehockey$NOC) > 1])
+@
+
+The following are some statistics about Winter Olympics Ice Hockey up to and
+including the 2006 Winter Olympics.
+Out of the
+\Sexpr{length(unique(medals$Year))}
+Winter Olympics that have been staged, 
+Mens Ice Hockey has been held in 
+\Sexpr{nrow(icehockey)}
+and the Womens in
+\Sexpr{nrow(icehockeyf)}.
+
+
+The USSR has won the most mens gold medals with
+\Sexpr{sum(icehockey$NOC == "URS")} golds.
+It goes up to \Sexpr{sum(icehockey$NOC %in% c("EUN", "URS"))}
+if the 1992 Unified Team is included.
+Canada has the second most golds with 
+\Sexpr{sum(icehockey$NOC == "CAN")}.
+After than the only two nations to win more than one gold are
+Sweden (%
+\Sexpr{sum(icehockey$NOC == "SWE")}
+golds)
+and the United States (%
+\Sexpr{sum(icehockey$NOC == "USA")}
+golds)
+Table \ref{tab:icehockey} shows the gold and silver medal countries by year.
+
+
+In the case of the Women's Ice Hockey, Canada has won
+\Sexpr{table(icehockeyf$NOC)["CAN"]}
+and the United States has won
+\Sexpr{table(icehockeyf$NOC)["USA"]}.
+
+<<icehockey_gold_silver>>=
+icehockeygs <- medals[medals$Sport == "Ice Hockey" & 
+    medals$Event.gender == "M" &
+    medals$Medal %in% c("Silver", "Gold"),  c("Year", "Medal", "NOC")]
+
+icetab <- list()
+icetab$data <- reshape(icehockeygs, idvar="Year", timevar="Medal",
+    direction="wide")
+names(icetab$data) <- c("Year", "Gold", "Silver")
+
+icetab$table <- rbind(names(icetab$data), icetab$data) 
+icetab$tex <- paste(apply(icetab$table, 1, function(x) 
+    paste(x, collapse= " & ")), "\\\\")
+icetab$tex <- append(icetab$tex, "\\midrule", 1)
+@
+
+
+\pd{table of Ice Hockey Gold and Silver}
+\begin{table}[htb]
+    \caption{Country Winning Gold and Silver Medals by Year in Mens Ice Hockey}
+    \label{tab:icehockey}
+    \begin{center}
+    \begin{tabular}{lll}
+    \toprule
+<<table_australian_medal_list, results=tex>>=
+cat(icetab$tex, sep ="\n")
+@   
+    \bottomrule
+    \end{tabular}
+    \end{center}
+\end{table}
+
+
+
 \end{document}  
