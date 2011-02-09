@@ -379,7 +379,7 @@ icetab$tex <- append(icetab$tex, "\\midrule", 1)
     \begin{center}
     \begin{tabular}{lll}
     \toprule
-<<table_australian_medal_list, results=tex>>=
+<<table_icehockey_gold_silver, results=tex>>=
 cat(icetab$tex, sep ="\n")
 @   
     \bottomrule
