@@ -32,11 +32,11 @@ Copies and explanation of the source code used to generate the report can be fou
 \end{abstract}
 
 <<import_data>>=
-source("import.r")
+source("import.r")                
 @                                              
- 
+
 \section{Dataset} 
-\pd{summary of data frame}
+\pd{summary of medals dataset}
 The Olympic Medals data frame includes \Sexpr{nrow(medals)} medals from
 \Sexpr{min(medals[["Year"]])} to 
 \Sexpr{max(medals[["Year"]])}.
@@ -53,30 +53,27 @@ x <- aggregate(medals$Year, list(Year = medals$Year), length)
 names(x) <- c("year", "medals") 
 x$pos <- seq(x$year) 
 fit <- nls(medals ~ a * pos ^ b + c, x, start = list(a=10, b=1, c = 50))
-
 @
-                  
 
-\pd{overview of medal counts}
-In general over the years the number of Winter Olympic medals awarded has increased.
-In order to model this relationship, year was converted to ordinal position.
-A three parameter power function seemed plausible, $y = ax^b + c$, where 
-$y$ is total medals awarded and $x$ is the ordinal position of the olympics
-starting at one.
+\pd{summary of medal counts by year}
+In general over the years the number of Winter Olympic medals awarded has
+increased.  
+In order to model this relationship, year was converted to ordinal position.  
+A three parameter power function seemed plausible, $y = ax^b + c$, where $y$ is
+total medals awarded and $x$ is the ordinal position of the olympics starting at
+one.
 The best fitting least square parameters were estimated to be
 $\Sexpr{round(coef(fit)["a"], 3)}x^%
 {\Sexpr{round(coef(fit)["b"], 3)}} + 
 \Sexpr{round(coef(fit)["c"], 3)}$.
 Figure~\ref{fig:medalByPos} displays the data and the fit of the model.
-The model predicts that 2010, 2014, and 2018
- would have 
+The model predicts that 2010, 2014, and 2018 would have 
  \Sexpr{round(predict(fit, data.frame(pos=max(x[["pos"]]) + 1)))}, 
  \Sexpr{round(predict(fit, data.frame(pos=max(x[["pos"]]) + 2)))}, and
  \Sexpr{round(predict(fit, data.frame(pos=max(x[["pos"]]) + 3)))} medals
  respectively.
-
-
-\pd{figure of medals}
+                      
+\pd{figure of medals by year}
 \begin{figure}[htb]
 \begin{center}
 <<figure_of_medals, fig=true, echo=false>>=
@@ -87,14 +84,14 @@ plot(medals ~ pos, x,  las = 1,
 		bty="l")
 lines(x$pos, predict(fit))
 @
-\caption{Total medals awarded by ordinal position of Olympics
-with predicted three parameter power function fit displayed.}
+\caption{Total medals awarded by ordinal position of Olympics with predicted
+three parameter power function fit displayed.}
 \label{fig:medalByPos}
 \end{center}
 \end{figure}
 
 \subsection{Gender Ratio by Year}
-\pd{R code chunk}
+\pd{R: create data and make table}
 <<fgenderRatioByYear_setup_data>>=
 medalsByYearByGender <- aggregate(medals$Year, 
     list(Year = medals$Year, Event.gender = medals$Event.gender), length)
@@ -117,21 +114,20 @@ propf$tex <- append(propf$tex, "\\midrule", 1)
 @
 
 \pd{description of figure}
-Figure~\ref{fig:genderRatioByYear} shows the number of medals
-won by males and females by year.
-Table \ref{tab:propFemale} shows the proportion of medals 
- awarded to females by year.
+Figure~\ref{fig:genderRatioByYear} shows the number of medals won by males and
+females by year.
+Table \ref{tab:propFemale} shows the proportion of medals awarded to females by
+year.
 It shows a generally similar pattern for males and females.
-Medals increase gradually until around the late 1980s
- after which the rate of increase accelerates.
+Medals increase gradually until around the late 1980s after which the rate of
+increase accelerates.
 However, females started from a much smaller base.
-Thus, both the absolute difference and the percentage difference
- has decreased over time
- to the point where in 2006
- \Sexpr{propf[["propF"]][length(propf[["propF"]])]}\%
- of medals were won by females.
+Thus, both the absolute difference and the percentage difference has decreased
+over time to the point where in 2006
+\Sexpr{as.numeric(propf[["propF"]][length(propf[["propF"]])])* 100}\%
+of medals were won by females.
 
-\pd{figure}
+\pd{figure: total medals by gender by year}
 \begin{figure}[htb]
 \begin{center}
 <<fgenderRatioByYear_figure, fig=true>>=
@@ -166,8 +162,8 @@ cat(propf$tex, sep ="\n")
 \end{center}
 \end{table}
 
-\subsection{Which countries have won the most medals?}
-\pd{R code chunk}
+\subsection{Countries with the Most Medals}
+\pd{R:}
 <<country_most_medals>>=
 cmm <- list()
 cmm$medals <- sort(table(medals$NOC), dec = TRUE)
@@ -186,15 +182,18 @@ cmm$table <- with(cmm,
 
 cmm$tex <- paste(apply(cmm$table, 1, function(x) paste(x, collapse= " & ")), "\\\\")
 cmm$tex <- append(cmm$tex, "\\midrule", 1)
-# write(unique(medals$NOC), "clipboard")
 @
 
 \pd{summary of table}
-\Sexpr{cmm[["country"]][1]} has won the most medals with
+Norway has won the most medals with
 \Sexpr{cmm[["medals"]][1]} 
-(\Sexpr{cmm[["propF"]][1]}
-\%).
+(\Sexpr{round(cmm[["prop"]][1]* 100, 2)}\%).
 Table~\ref{tab:medalsByCountryRank} shows the top 10. 
+Russia and USSR have a combined total of  
+\Sexpr{sum(cmm$medals[c("RUS", "URS")])}.
+Germany, GDR, and FRG have a combined medal total of 
+\Sexpr{sum(cmm$medals[c("GER", "GDR", "FRG")])}.
+
 
 \pd{Table of rankings by country}
 \begin{table}[htb]
@@ -211,11 +210,11 @@ cat(cmm$tex, sep ="\n")
 \end{center}
 \end{table}
 
-\subsection{Countries with highest proportion of gold?}
+\subsection{Proportion of Gold Medals by Country}
 \pd{summary of figure}
 Looking only at countries that have won more than 50 medals in the dataset,
 Figure \ref{fig:prop_gold} shows the proportion of medals won that were gold,
-    silver, or bronze.
+silver, or bronze.
 
 \pd{figure}
 \begin{figure}[htb]
@@ -225,22 +224,19 @@ NOC50Plus <- names(table(medals$NOC)[table(medals$NOC) > 50])
 medalsSubset <- medals[medals$NOC %in% NOC50Plus, ]
 medalsByMedalByNOC <- prop.table(table(medalsSubset$NOC, medalsSubset$Medal), margin = 1)
 medalsByMedalByNOC <- medalsByMedalByNOC[order(medalsByMedalByNOC[, "Gold"], 
-        decreasing = TRUE), c("Gold", "Silver", "Bronze")]
+         decreasing = TRUE), c("Gold", "Silver", "Bronze")]
 barplot(round(t(medalsByMedalByNOC), 2), horiz = TRUE, las = 1, 
 		col=c("gold", "grey71", "chocolate4"), 
 		xlab = "Proportion of Medals")
 @
-
 \end{center}
 \caption{Proportion of medals won that were gold, silver or bronze.}
 \label{fig:prop_gold}
 \end{figure}
 
 
-
-
 \subsection{How many different countries have won medals by year?}
-\pd{r coce chunk}
+\pd{R: }
 <<number_of_countries_prepare>>=
 listOfYears <- unique(medals$Year)                   
 names(listOfYears) <- unique(medals$Year)
@@ -249,8 +245,8 @@ totalNocByYear <- sapply(listOfYears,  function(X)
 @
 
 \pd{description of figure}
-Figure \ref{fig:total_countries_by_year}
-shows the total number of countries winning medals by year.
+Figure \ref{fig:total_countries_by_year} shows the total number of countries
+winning medals by year.
 
 \pd{figure of stuff}
 \begin{figure}[htb]
@@ -267,4 +263,50 @@ plot(x= names(totalNocByYear), totalNocByYear,
 \caption{Total Number of Countries Winning Medals By Year}
 \label{fig:total_countries_by_year}
 \end{figure}
+
+\subsection{Australia at the Winter Olympics}
+<<ausmedals>>=
+ausmedals <- list()
+ausmedals$data <- medals[medals$NOC == "AUS", ]
+ausmedals$data <- ausmedals$data[, c("Year", "City", "Discipline", "Event",
+"Medal")]
+ausmedals$table <- rbind(names(ausmedals$data), ausmedals$data) 
+ausmedals$tex <- paste(apply(ausmedals$table, 1, function(x) 
+    paste(x, collapse= " & ")), "\\\\")
+ausmedals$tex <- append(ausmedals$tex, "\\midrule", 1)
+@
+Given that I am an Australian I decided to have a look at the Australian medal
+count.
+Australia does not get a lot of snow.
+
+Up to and including 2006, Australia has won 
+\Sexpr{nrow(ausmedals$data)}
+medals.
+It won its first medal in 
+\Sexpr{min(ausmedals$data$Year)}.
+Of the \Sexpr{nrow(ausmedals$data)} medals, 
+\Sexpr{sum(ausmedals$data$Medal == "Bronze")}
+were bronze,
+\Sexpr{sum(ausmedals$data$Medal == "Silver")}
+were silver, and
+\Sexpr{sum(ausmedals$data$Medal == "Gold")}
+were gold.
+
+Table \ref{tab:medalsAUS} lists each of these medals.
+
+
+\pd{table of Australian medals} 
+\begin{table}[htb]
+    \caption{List of Australian Medals}
+    \label{tab:medalsAUS}
+    \begin{center}
+    \begin{tabular}{lllll}
+    \toprule
+<<table_australian_medal_list, results=tex>>=
+cat(ausmedals$tex, sep ="\n")
+@   
+    \bottomrule
+    \end{tabular}
+    \end{center}
+\end{table}
 \end{document}  
